@@ -258,16 +258,6 @@ button:active {
   flex-wrap: wrap;
 }
 
-.tetris-container {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: #0b1120;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 8px;
-  height: 500px;
-}
 
 /* Responsive */
 @media (max-width: 900px) {
