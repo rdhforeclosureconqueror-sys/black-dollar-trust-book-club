@@ -1,4 +1,7 @@
 const netStatus=document.getElementById("netStatus");
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
 function updateNetwork(){netStatus.textContent=navigator.onLine?"🟢 Online":"🔴 Offline";}
 window.addEventListener("online",updateNetwork);
 window.addEventListener("offline",updateNetwork);
