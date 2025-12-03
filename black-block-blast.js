@@ -1,5 +1,8 @@
 const canvas=document.getElementById("tetrisCanvas"),ctx=canvas.getContext("2d");
-const startBtn=document.getElementById("tetrisStartBtn"),stopBtn=document.getElementById("tetrisStopBtn"),scoreEl=document.getElementById("tetrisScore");
+const startBtn=document.getElementById("tetrisStartBtn");
+const stopBtn=document.getElementById("tetrisStopBtn");
+const scoreEl=document.getElementById("tetrisScore");
+
 const COLS=10,ROWS=20,BLOCK=24;
 canvas.width=COLS*BLOCK;canvas.height=ROWS*BLOCK;
 let board,player,score=0,running=false,anim;
