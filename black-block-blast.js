@@ -1,26 +1,34 @@
 /* ===================================================
-   Black Block Blast – Pan-African Tetris Variant
+   Black Block Blast — Pan-African Tetris Game
+   Rebuilt Clean Version (No Duplicate Variables)
 =================================================== */
 
+// === Canvas Setup ===
 const canvas = document.getElementById("tetrisCanvas");
 const ctx = canvas.getContext("2d");
+
 const startBtn = document.getElementById("tetrisStartBtn");
 const stopBtn = document.getElementById("tetrisStopBtn");
 const scoreEl = document.getElementById("tetrisScore");
 
-const COLS = 10, ROWS = 20, BLOCK = 25;
+// === Game Constants ===
+const COLS = 10;
+const ROWS = 20;
+const BLOCK = 25;
 canvas.width = COLS * BLOCK;
 canvas.height = ROWS * BLOCK;
 
+// === Game Variables ===
 let board = [];
 let currentPiece = null;
-let gameInterval = null;
+let nextPiece = null;
 let score = 0;
+let gameInterval = null;
 
-// Colors inspired by Pan-African palette
-const COLORS = ["#ef4444", "#22c55e", "#facc15", "#3b82f6", "#eab308"];
+// === Colors (Pan-African Inspired) ===
+const COLORS = ["#22c55e", "#ef4444", "#facc15", "#2563eb", "#eab308", "#9333ea"];
 
-// Pieces
+// === Shape Definitions ===
 const SHAPES = [
   [[1, 1, 1, 1]],                 // I
   [[1, 1], [1, 1]],               // O
@@ -31,10 +39,12 @@ const SHAPES = [
   [[0, 1, 1], [1, 1, 0]]          // Z
 ];
 
+// === Board Initialization ===
 function initBoard() {
   board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 }
 
+// === Drawing Utilities ===
 function drawSquare(x, y, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK - 1, BLOCK - 1);
@@ -50,6 +60,7 @@ function drawBoard() {
   if (currentPiece) currentPiece.draw();
 }
 
+// === Piece Class ===
 class Piece {
   constructor(shape, color) {
     this.shape = shape;
@@ -57,15 +68,20 @@ class Piece {
     this.x = 3;
     this.y = 0;
   }
+
   draw() {
     this.shape.forEach((row, r) =>
-      row.forEach((v, c) => v && drawSquare(this.x + c, this.y + r, this.color))
+      row.forEach((v, c) => {
+        if (v) drawSquare(this.x + c, this.y + r, this.color);
+      })
     );
   }
+
   move(dir) {
     this.x += dir;
     if (this.collision()) this.x -= dir;
   }
+
   drop() {
     this.y++;
     if (this.collision()) {
@@ -74,6 +90,7 @@ class Piece {
       newPiece();
     }
   }
+
   rotate() {
     const newShape = this.shape[0].map((_, c) =>
       this.shape.map(row => row[c]).reverse()
@@ -82,6 +99,7 @@ class Piece {
     this.shape = newShape;
     if (this.collision()) this.shape = prevShape;
   }
+
   collision() {
     return this.shape.some((row, r) =>
       row.some(
@@ -94,6 +112,7 @@ class Piece {
       )
     );
   }
+
   lock() {
     this.shape.forEach((row, r) =>
       row.forEach((v, c) => {
@@ -104,6 +123,7 @@ class Piece {
   }
 }
 
+// === Game Logic ===
 function clearLines() {
   let lines = 0;
   for (let y = ROWS - 1; y >= 0; y--) {
@@ -123,20 +143,37 @@ function newPiece() {
   const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
   currentPiece = new Piece(shape, color);
+  if (collisionOnSpawn()) {
+    stopGame();
+    alert("Game Over — Final Score: " + score);
+  }
+}
+
+function collisionOnSpawn() {
+  return currentPiece.shape.some((row, r) =>
+    row.some(
+      (v, c) =>
+        v &&
+        board[r + currentPiece.y] &&
+        board[r + currentPiece.y][c + currentPiece.x]
+    )
+  );
 }
 
 function gameLoop() {
+  if (!currentPiece) return;
   currentPiece.drop();
   drawBoard();
 }
 
+// === Control Functions ===
 function startGame() {
   initBoard();
-  newPiece();
   score = 0;
-  scoreEl.textContent = "0";
+  scoreEl.textContent = score;
+  newPiece();
   clearInterval(gameInterval);
-  gameInterval = setInterval(gameLoop, 600);
+  gameInterval = setInterval(gameLoop, 500);
   document.addEventListener("keydown", handleKey);
 }
 
@@ -146,16 +183,26 @@ function stopGame() {
   document.removeEventListener("keydown", handleKey);
 }
 
+// === Keyboard Controls ===
 function handleKey(e) {
   if (!currentPiece) return;
   switch (e.key) {
-    case "ArrowLeft": currentPiece.move(-1); break;
-    case "ArrowRight": currentPiece.move(1); break;
-    case "ArrowUp": currentPiece.rotate(); break;
-    case "ArrowDown": currentPiece.drop(); break;
+    case "ArrowLeft":
+      currentPiece.move(-1);
+      break;
+    case "ArrowRight":
+      currentPiece.move(1);
+      break;
+    case "ArrowUp":
+      currentPiece.rotate();
+      break;
+    case "ArrowDown":
+      currentPiece.drop();
+      break;
   }
   drawBoard();
 }
 
+// === Event Listeners ===
 startBtn.addEventListener("click", startGame);
 stopBtn.addEventListener("click", stopGame);
