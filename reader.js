@@ -1,77 +1,163 @@
-const netStatus=document.getElementById("netStatus");
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+/* ===================================================
+   Black Dollar Trust Book Club – Reader + Upload Logic
+=================================================== */
 
-function updateNetwork(){netStatus.textContent=navigator.onLine?"🟢 Online":"🔴 Offline";}
-window.addEventListener("online",updateNetwork);
-window.addEventListener("offline",updateNetwork);
-updateNetwork();
+// --- PDF.js setup ---
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
-const bookInput=document.getElementById("bookInput");
-const bookList=document.getElementById("bookList");
-const bookStatus=document.getElementById("bookStatus");
-const bookPreview=document.getElementById("bookPreview");
-const voiceSelect=document.getElementById("voiceSelect");
-const playBtn=document.getElementById("readerPlayBtn");
-const pauseBtn=document.getElementById("readerPauseBtn");
-const stopBtn=document.getElementById("readerStopBtn");
+// Elements
+const bookInput = document.getElementById("bookInput");
+const bookList = document.getElementById("bookList");
+const uploadStatus = document.getElementById("uploadStatus");
+const pdfCanvas = document.getElementById("pdfCanvas");
+const textPreview = document.getElementById("textPreview");
+const voiceSelect = document.getElementById("voiceSelect");
+const readBtn = document.getElementById("readBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const stopBtn = document.getElementById("stopBtn");
 
-const synth=window.speechSynthesis;
-let books=[],current=null,utterance=null;
+const logoInput = document.getElementById("logoInput");
+const logoPreview = document.getElementById("logoPreview");
 
-bookInput.addEventListener("change",async e=>{
-  const files=[...e.target.files];books=[];
-  bookList.innerHTML="";bookPreview.textContent="Loading…";
-  for(const f of files){
-    const ext=f.name.split(".").pop().toLowerCase();
-    if(ext==="txt"){const t=await f.text();books.push({name:f.name,type:"txt",text:t});}
-    else if(ext==="pdf"){const ab=await f.arrayBuffer();books.push({name:f.name,type:"pdf",data:ab});}
-    else if(ext==="epub"){books.push({name:f.name,type:"epub",file:f});}
+let books = [];
+let currentBook = null;
+let synth = window.speechSynthesis;
+
+// ========== Logo upload ==========
+function initLogo() {
+  const savedLogo = localStorage.getItem("clubLogo");
+  if (savedLogo) {
+    logoPreview.src = savedLogo;
+  } else {
+    logoPreview.src = "https://upload.wikimedia.org/wikipedia/commons/3/3d/Gold_chain_pattern.svg";
   }
-  renderList();
+
+  logoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      logoPreview.src = reader.result;
+      localStorage.setItem("clubLogo", reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+initLogo();
+
+// ========== Book upload + preview ==========
+bookInput.addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  uploadStatus.textContent = "Loading files...";
+  books = [];
+  bookList.innerHTML = "";
+  textPreview.textContent = "";
+  pdfCanvas.style.display = "none";
+
+  for (const file of files) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "txt") {
+      const text = await file.text();
+      books.push({ name: file.name, type: "txt", text });
+    } else if (ext === "pdf") {
+      const arrayBuffer = await file.arrayBuffer();
+      books.push({ name: file.name, type: "pdf", data: arrayBuffer });
+    } else if (ext === "epub") {
+      const arrayBuffer = await file.arrayBuffer();
+      books.push({ name: file.name, type: "epub", data: arrayBuffer });
+    }
+  }
+
+  renderBookList();
 });
 
-function renderList(){
-  bookList.innerHTML="";
-  books.forEach((b,i)=>{
-    const li=document.createElement("li");li.textContent=b.name;
-    li.onclick=()=>selectBook(i);bookList.appendChild(li);
+function renderBookList() {
+  bookList.innerHTML = "";
+  books.forEach((book, i) => {
+    const div = document.createElement("div");
+    div.textContent = book.name;
+    div.addEventListener("click", () => openBook(i));
+    bookList.appendChild(div);
   });
-  if(books.length)selectBook(0);
+  uploadStatus.textContent = `${books.length} file(s) loaded.`;
 }
 
-async function selectBook(i){
-  current=books[i];
-  [...bookList.children].forEach((c,j)=>c.classList.toggle("active",j===i));
-  bookStatus.textContent=`Loaded ${current.name}`;
-  if(current.type==="txt"){
-    bookPreview.textContent=current.text.slice(0,1000);
-  }else if(current.type==="pdf"){
-    const pdf=await pdfjsLib.getDocument({data:current.data}).promise;
-    const page=await pdf.getPage(1);
-    const text=(await page.getTextContent()).items.map(t=>t.str).join(" ");
-    bookPreview.textContent=text.slice(0,800);
-  }else if(current.type==="epub"){
-    const book=await ePub(current.file);
-    const text=await book.loaded.metadata;
-    bookPreview.textContent="EPUB loaded – use voice to read.";
+async function openBook(index) {
+  currentBook = books[index];
+  Array.from(bookList.children).forEach((el, i) =>
+    el.classList.toggle("active", i === index)
+  );
+
+  textPreview.textContent = "";
+  pdfCanvas.style.display = "none";
+
+  if (currentBook.type === "txt") {
+    textPreview.textContent = currentBook.text.slice(0, 5000);
+  } else if (currentBook.type === "pdf") {
+    renderPDF(currentBook.data);
+  } else if (currentBook.type === "epub") {
+    renderEPUB(currentBook.data);
   }
 }
 
-/* === TTS === */
-function loadVoices(){
-  const v=synth.getVoices();voiceSelect.innerHTML="";
-  v.forEach(x=>{const o=document.createElement("option");o.value=x.name;o.textContent=`${x.name} (${x.lang})`;voiceSelect.appendChild(o);});
+// ---------- PDF ----------
+async function renderPDF(arrayBuffer) {
+  const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdfDoc.getPage(1);
+  const viewport = page.getViewport({ scale: 1.5 });
+  const ctx = pdfCanvas.getContext("2d");
+  pdfCanvas.height = viewport.height;
+  pdfCanvas.width = viewport.width;
+  pdfCanvas.style.display = "block";
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  uploadStatus.textContent = `PDF loaded: page 1 / ${pdfDoc.numPages}`;
 }
-if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;loadVoices();
 
-playBtn.onclick=()=>{
-  if(!current||current.type!=="txt"){bookStatus.textContent="Voice only for TXT.";return;}
-  if(synth.speaking)synth.cancel();
-  utterance=new SpeechSynthesisUtterance(current.text);
-  const v=synth.getVoices().find(x=>x.name===voiceSelect.value);
-  if(v)utterance.voice=v;synth.speak(utterance);
-  bookStatus.textContent="Reading…";
-};
-pauseBtn.onclick=()=>{if(!synth.speaking)return;if(synth.paused){synth.resume();bookStatus.textContent="Resumed";}else{synth.pause();bookStatus.textContent="Paused";}};
-stopBtn.onclick=()=>{if(synth.speaking)synth.cancel();bookStatus.textContent="Stopped.";};
+// ---------- EPUB ----------
+function renderEPUB(arrayBuffer) {
+  const book = ePub(arrayBuffer);
+  book.renderTo(textPreview);
+  uploadStatus.textContent = "EPUB loaded.";
+}
+
+// ---------- TTS ----------
+function populateVoices() {
+  const voices = synth.getVoices();
+  voiceSelect.innerHTML = "";
+  voices.forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(opt);
+  });
+}
+populateVoices();
+if (synth) synth.onvoiceschanged = populateVoices;
+
+let currentUtterance = null;
+readBtn.addEventListener("click", () => {
+  if (!currentBook || currentBook.type !== "txt") {
+    uploadStatus.textContent = "Voice reading works with TXT only.";
+    return;
+  }
+  const voice = synth.getVoices().find(v => v.name === voiceSelect.value);
+  currentUtterance = new SpeechSynthesisUtterance(currentBook.text);
+  if (voice) currentUtterance.voice = voice;
+  synth.speak(currentUtterance);
+  uploadStatus.textContent = "Reading...";
+});
+
+pauseBtn.addEventListener("click", () => {
+  if (synth.speaking) {
+    if (synth.paused) synth.resume();
+    else synth.pause();
+  }
+});
+stopBtn.addEventListener("click", () => {
+  synth.cancel();
+  uploadStatus.textContent = "Stopped.";
+});
