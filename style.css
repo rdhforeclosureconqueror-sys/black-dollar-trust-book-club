@@ -39,3 +39,27 @@ main{display:flex;flex:1;flex-wrap:wrap;}
 .tetris-controls{display:flex;gap:8px;align-items:center;margin-top:8px;}
 @media(max-width:800px){main{flex-direction:column;}
   .books-panel{border-right:none;border-bottom:1px solid var(--border-subtle);} }
+/* === GOLD OUTLINE FRAME === */
+body {
+  border: 8px solid #d4af37;        /* metallic gold frame */
+  border-radius: 14px;
+  margin: 10px;
+  box-shadow: 0 0 25px rgba(212,175,55,0.6);
+  position: relative;
+}
+
+/* === LION CORNERS === */
+body::before, body::after, .app::before, .app::after {
+  content: "";
+  position: absolute;
+  width: 64px; height: 64px;
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7b/Lion_head_icon_gold.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+}
+
+body::before { top: -32px; left: -32px; transform: rotate(0deg); }
+body::after  { top: -32px; right: -32px; transform: rotate(90deg); }
+.app::before { bottom: -32px; left: -32px; transform: rotate(270deg); }
+.app::after  { bottom: -32px; right: -32px; transform: rotate(180deg); }
