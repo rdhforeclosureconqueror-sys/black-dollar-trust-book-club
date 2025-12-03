@@ -2,61 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Black Dollar Trust Book Club</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- PDF.js + EPUB.js -->
   <script src="libs/pdf.min.js"></script>
+  <script src="libs/pdf.worker.min.js"></script>
   <script src="libs/epub.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <div class="logo">BD</div>
-      <div class="brand-text">
-        <div class="brand-title">Black Dollar Trust Book Club</div>
-        <div class="brand-subtitle">Pan-African Reader · Voice · Black Block Blast</div>
-      </div>
-    </div>
-    <div id="netStatus">🟢 Online</div>
-  </header>
-
-  <main>
-    <!-- ===== BOOKS PANEL ===== -->
-    <section class="books-panel">
-      <h2>📚 Your Books</h2>
-      <p class="hint">Upload PDF / TXT / EPUB files to read and listen.</p>
-
-      <label class="file-wrapper">
-        <input id="bookInput" type="file" multiple accept=".pdf,.txt,.epub" />
-        <span class="btn btn-primary">Upload Books</span>
-      </label>
-
-      <div id="bookStatus" class="status">No books loaded.</div>
-      <ul id="bookList" class="book-list"></ul>
-
-      <div class="reader-controls">
-        <select id="voiceSelect"></select>
-        <button id="readerPlayBtn" class="reader-btn play">▶ Read</button>
-        <button id="readerPauseBtn" class="reader-btn pause">⏸ Pause</button>
-        <button id="readerStopBtn" class="reader-btn stop">⏹ Stop</button>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-title">
+          <h1>Black Dollar Trust Book Club</h1>
+          <span class="subtitle">Pan-African Reading • Knowledge • Games</span>
+        </div>
       </div>
 
-      <div id="bookPreview" class="book-preview">Upload a book to see its preview here.</div>
-    </section>
-
-    <!-- ===== GAME PANEL ===== -->
-    <section class="games-panel">
-      <h2>🖤 Black Block Blast</h2>
-      <p class="hint">A Pan-African Tetris challenge – align blocks, clear rows, build legacy.</p>
-      <canvas id="tetrisCanvas" width="240" height="480"></canvas>
-
-      <div class="tetris-controls">
-        <button id="tetrisStartBtn" class="btn btn-primary">Start</button>
-        <button id="tetrisStopBtn" class="btn">Stop</button>
-        <span class="score-label">Score: <span id="tetrisScore">0</span></span>
+      <div class="header-right">
+        <label class="logo-upload">
+          <input type="file" id="logoInput" accept="image/*" hidden />
+          <img id="logoPreview" alt="Upload Logo" title="Click to upload logo" />
+          <span class="upload-hint">Upload Logo</span>
+        </label>
       </div>
-    </section>
-  </main>
+    </header>
+
+    <main class="main">
+      <!-- Left: Reader -->
+      <section class="reader-panel">
+        <h2>📚 Your Library</h2>
+        <p class="panel-subtext">Upload <b>PDF</b>, <b>TXT</b>, or <b>EPUB</b> files to begin reading.</p>
+
+        <div class="upload-row">
+          <label class="file-btn">
+            <input type="file" id="bookInput" multiple accept=".pdf,.txt,.epub" hidden />
+            Upload Book(s)
+          </label>
+          <span id="uploadStatus">No files uploaded.</span>
+        </div>
+
+        <div id="bookList" class="book-list"></div>
+
+        <div class="reader-controls">
+          <select id="voiceSelect" class="voice-select"></select>
+          <button id="readBtn">▶ Read</button>
+          <button id="pauseBtn">⏸ Pause</button>
+          <button id="stopBtn">⏹ Stop</button>
+        </div>
+
+        <div class="preview-area">
+          <canvas id="pdfCanvas"></canvas>
+          <div id="textPreview"></div>
+        </div>
+      </section>
+
+      <!-- Right: Game -->
+      <section class="game-panel">
+        <h2>🎮 Black Block Blast</h2>
+        <p class="panel-subtext">Tap “Start” to play. Stack blocks, build combos, and rise in rank.</p>
+
+        <div class="game-controls">
+          <button id="tetrisStartBtn">▶ Start Game</button>
+          <button id="tetrisStopBtn">⏹ Stop</button>
+          <span class="score-display">Score: <span id="tetrisScore">0</span></span>
+        </div>
+
+        <div class="tetris-container">
+          <canvas id="tetrisCanvas" width="300" height="500"></canvas>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script src="reader.js"></script>
   <script src="black-block-blast.js"></script>
