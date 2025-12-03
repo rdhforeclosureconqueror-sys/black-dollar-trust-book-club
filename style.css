@@ -1,0 +1,41 @@
+:root {
+  --pan-black:#0a0a0a;--pan-red:#ef4444;--pan-green:#22c55e;
+  --pan-gold:#facc15;--text-main:#f9fafb;--text-muted:#9ca3af;
+  --border-subtle:#1f2937;--bg-main:#0a0a0a;--bg-alt:#111827;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:radial-gradient(circle at top,#111827,var(--pan-black));
+  color:var(--text-main);min-height:100vh;display:flex;flex-direction:column;}
+header{background:linear-gradient(90deg,var(--pan-green),var(--pan-black),
+  var(--pan-red),var(--pan-gold));padding:10px 14px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+.logo{width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,var(--pan-gold),var(--pan-green));
+  display:flex;align-items:center;justify-content:center;font-weight:900;
+  color:var(--pan-black);box-shadow:0 0 0 2px var(--pan-red);}
+.brand-text{margin-left:8px;}
+main{display:flex;flex:1;flex-wrap:wrap;}
+.books-panel,.games-panel{flex:1 1 360px;padding:12px;}
+.books-panel{border-right:1px solid var(--border-subtle);}
+.btn{border-radius:999px;border:1px solid #374151;
+  padding:6px 12px;background:#111827;color:var(--text-main);cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg,var(--pan-green),var(--pan-gold));
+  color:var(--pan-black);font-weight:600;}
+.reader-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.reader-btn{border-radius:999px;border:1px solid #374151;
+  padding:4px 9px;background:#1f2937;color:var(--text-main);cursor:pointer;}
+.reader-btn.play{background:var(--pan-green);color:var(--pan-black);}
+.reader-btn.pause{background:var(--pan-gold);color:var(--pan-black);}
+.reader-btn.stop{background:var(--pan-red);color:var(--pan-black);}
+.book-list{list-style:none;max-height:160px;overflow-y:auto;
+  margin-top:6px;border:1px solid var(--border-subtle);border-radius:6px;}
+.book-list li{padding:4px 6px;border-bottom:1px solid #1f2937;cursor:pointer;}
+.book-list li.active{background:rgba(34,197,94,.15);}
+.book-preview{margin-top:8px;padding:8px;border:1px solid var(--border-subtle);
+  border-radius:6px;background:#0f172a;min-height:120px;overflow:auto;font-size:.9rem;}
+#tetrisCanvas{background:#0f172a;border:2px solid var(--pan-green);
+  border-radius:6px;margin-top:10px;}
+.tetris-controls{display:flex;gap:8px;align-items:center;margin-top:8px;}
+@media(max-width:800px){main{flex-direction:column;}
+  .books-panel{border-right:none;border-bottom:1px solid var(--border-subtle);} }
